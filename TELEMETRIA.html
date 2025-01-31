@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Comandos y Telemetría</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #ffffff;
+        }
+        .cabecera img{
+            width: 70px;
+            margin: 6px;
+        }
+        .cabecera{
+            display: flex;
+            justify-content: space-between;
+            text-align: center;
+            color: rgb(230 21 21);
+        }
+        .cabecera h4{
+            color: #000;
+            text-align: end;
+            margin: auto;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .box {
+            width: 48%;
+            background-color: lightgoldenrodyellow;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .box button{
+            background-color: #ff0000;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: 0.3s; /* Animación suave */
+        }
+        input[type="file"], input[type="text"], input[type="password"], textarea {
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #333;
+        }
+        .section-title {
+            font-weight: bold;
+            color: #00e676;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="cabecera">
+        <h1>Generador de Telemetría </h2>
+        <h4>  dirección canales asistidos gerencia soporte técnico</h4>
+        <img src="https://i.imgur.com/Zb4cV47.png" alt="">
+
+    </header>
+
+
+    <div class="container">
+
+        <!-- Generador de Telemetría -->
+        <div class="box">
+            <h3>Generador de Resumen de Telemetría de Nodo</h3>
+            <textarea id="telemetriaInput" placeholder="Pega la telemetria de Secure crt aqui..."></textarea>
+            <button onclick="calcularTelemetria()">Generar Resumen</button>
+            <button onclick="copiarTelemetria()">Copiar Telemetría</button>
+	    <button onclick="borrarTelemetria()">Borrar Telemetría</button>
+            <div class="resultado" id="resultado"></div>
+        </div>
+    </div>
+
+    <script>
+    function calcularTelemetria() {
+    const input = document.getElementById('telemetriaInput').value.trim();
+    const lineas = input.split('\n');
+    let totalCM = 0;
+    let sumTx = 0, sumRx = 0, sumSnrUp = 0, sumSnrDw = 0;
+    let countTxAlta = 0, countTxBaja = 0;
+    let countRxAlta = 0, countRxBaja = 0;
+    let countSnrUpBajo = 0, countSnrDwBajo = 0;
+
+    // Extraer el nombre del nodo
+    const nodoMatch = input.match(/"([^"]+)"/);
+    const nodoNombre = nodoMatch ? nodoMatch[1] : "NODO Desconocido";
+
+    for (let linea of lineas) {
+        const partes = linea.split(/\s+/);
+        if (partes.length !== 6) continue; // Asegura que hay 6 partes
+
+        const [mac, ip, tx, rx, snrUp, snrDw] = partes;
+        const txVal = parseFloat(tx);
+        const rxVal = parseFloat(rx);
+        const snrUpVal = parseFloat(snrUp);
+        const snrDwVal = parseFloat(snrDw);
+
+        if (!isNaN(txVal) && !isNaN(rxVal) && !isNaN(snrUpVal) && !isNaN(snrDwVal)) {
+            totalCM++;
+
+            // Sumar valores para promedios
+            sumTx += txVal;
+            sumRx += rxVal;
+            sumSnrUp += snrUpVal;
+            sumSnrDw += snrDwVal;
+
+            // Contar según niveles
+            if (txVal > 51) countTxAlta++;
+            if (txVal < 37) countTxBaja++;
+            if (rxVal > 15) countRxAlta++;
+            if (rxVal < -11) countRxBaja++;
+            if (snrUpVal < 30) countSnrUpBajo++;
+            if (snrDwVal < 32) countSnrDwBajo++;
+        }
+    }
+
+    // Calcular promedios
+    const promTx = (sumTx / totalCM).toFixed(2);
+    const promRx = (sumRx / totalCM).toFixed(2);
+    const promSnrUp = (sumSnrUp / totalCM).toFixed(2);
+    const promSnrDw = (sumSnrDw / totalCM).toFixed(2);
+
+    // Generar el resultado
+    const resultado = `
+        <h2>Se anexa telemetría Quarter del ${nodoNombre}</h2>
+        <table>
+            <tr>
+                <th>Prom. Tx</th>
+                <th>Prom. Rx</th>
+                <th>Prom. Up</th>
+                <th>Prom. Down</th>
+            </tr>
+            <tr>
+                <td>${promTx}</td>
+                <td>${promRx}</td>
+                <td>${promSnrUp}</td>
+                <td>${promSnrDw}</td>
+            </tr>
+        </table>
+        <p>Total CM: ${totalCM}</p>
+        <h3>% de CM Fuera de niveles (Malo)</h3>
+        <table>
+            <tr><th>Métricas</th><th>Cantidad</th><th>% Afectados</th></tr>
+            <tr><td>CM con Tx Alta</td><td>${countTxAlta}</td><td>${Math.round((countTxAlta / totalCM) * 100)}%</td></tr>
+            <tr><td>CM con Tx Baja</td><td>${countTxBaja}</td><td>${Math.round((countTxBaja / totalCM) * 100)}%</td></tr>
+            <tr><td>CM con Rx Alta</td><td>${countRxAlta}</td><td>${Math.round((countRxAlta / totalCM) * 100)}%</td></tr>
+            <tr><td>CM con Rx Baja</td><td>${countRxBaja}</td><td>${Math.round((countRxBaja / totalCM) * 100)}%</td></tr>
+            <tr><td>CM con Up Bajo</td><td>${countSnrUpBajo}</td><td>${Math.round((countSnrUpBajo / totalCM) * 100)}%</td></tr>
+            <tr><td>CM con Down Bajo</td><td>${countSnrDwBajo}</td><td>${Math.round((countSnrDwBajo / totalCM) * 100)}%</td></tr>
+        </table>
+        <p><strong>Total de Cable Modems Afectados:</strong> ${countTxAlta + countTxBaja + countRxBaja + countSnrUpBajo + countSnrDwBajo}</p>
+    `;
+
+    document.getElementById('resultado').innerHTML = resultado;
+}
+
+function copiarTelemetria() {
+    const resultado = document.getElementById('resultado').innerText;
+    navigator.clipboard.writeText(resultado)
+        
+        .catch(err => console.error('Error al copiar: ', err));
+}
+
+function borrarTelemetria() {
+    document.getElementById('telemetriaInput').value = ''; // Limpia el campo de entrada
+    document.getElementById('resultado').innerHTML = ''; // Limpia el resultado anterior
+}
+
+
+
+
+
+    </script>
+</body>
+</html>
