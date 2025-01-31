@@ -30,7 +30,17 @@
 
         .container {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            align-items: flex-start; /* Alinea todo al inicio */
+            position: relative; /* Permite posicionar elementos hijos */
+            min-height: 400px; /* Ajusta según el contenido */
+        }
+        .container img {
+            width: 300px;
+            height: 85px;
+            POSITION: absolute;
+            RIGHT: 0;
+            bottom: 0;
         }
         .box {
             width: 48%;
@@ -81,13 +91,23 @@
             padding: 8px;
             text-align: center;
         }
+        .marca-agua {
+            position: fixed;
+            BOTTOM: 0;
+            width: 95%;
+            text-align: end;
+            font-size: 16px;
+            color: rgba(0, 0, 0, 0.5);
+
+        }
+
     </style>
 </head>
 <body>
 
     <header class="cabecera">
         <h1>Generador de Telemetría </h2>
-        <h4>  dirección canales asistidos gerencia soporte técnico</h4>
+        <h4>  dirección canales asistidos (gerencia soporte técnico) </h4>
         <img src="https://i.imgur.com/Zb4cV47.png" alt="">
 
     </header>
@@ -104,6 +124,12 @@
 	    <button onclick="borrarTelemetria()">Borrar Telemetría</button>
             <div class="resultado" id="resultado"></div>
         </div>
+        <img src="https://latcom.com.co/wp-content/uploads/2020/10/logo-latcom.png" alt="">
+        <footer class="marca-agua">
+            <P>Modificado por oscar perez - Ingeniero Electrónico </P>
+            <P>Tomado de : telemetria hfc</P>
+        </footer>
+
     </div>
 
     <script>
